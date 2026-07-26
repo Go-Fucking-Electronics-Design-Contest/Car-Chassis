@@ -1,7 +1,18 @@
 # 移植手册
 
 每次拉取代码需要做的：
+
+1. 修改 Include Path
+
 ![portable](.\picture\portable.png)
+
+2. 修改 DriverLib 的文件
+
+![image-20260727012125114](C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20260727012125114.png)
+
+**在上一步填的 Include Path 下找到 ti/driverlib **
+
+![portable2](picture\portable2.png)
 
 理由：
 

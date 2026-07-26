@@ -53,3 +53,11 @@ dkms.conf
 
 # debug information files
 *.dwo
+
+# 工程备份文件
+i_dont_know.uvguix.*
+i_dont_know.uvoptx
+
+# 过程产物
+Objects/
+Listings/

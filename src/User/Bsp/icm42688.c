@@ -18,6 +18,7 @@ static uint8_t icm_rx_dma_buf[ICM42688_SPI_DMA_LEN];
 
 static volatile uint8_t icm_dma_busy = 0;
 static volatile uint8_t icm_frame_ready = 0;
+static volatile uint8_t icm_initialized = 0;
 
 static icm42688_raw_t icm_raw;
 volatile icm42688_data_t icm42688_data;
@@ -185,6 +186,14 @@ int8_t ICM42688_Init(void)
     uint8_t reg;
     uint8_t whoami;
 
+    icm_initialized = 0u;
+    DL_GPIO_disableInterrupt(
+        GPIO_IMU_INT1_PORT,
+        GPIO_IMU_INT1_IMU_INT1_PA_PIN);
+    DL_GPIO_clearInterruptStatus(
+        GPIO_IMU_INT1_PORT,
+        GPIO_IMU_INT1_IMU_INT1_PA_PIN);
+
     ICM42688_CS_HIGH();
 
     /*
@@ -288,6 +297,14 @@ int8_t ICM42688_Init(void)
      * 开启 Gyro/Accel 后等待稳定
      */
     DL_Common_delayCycles((CPUCLK_FREQ / 1000) * 50);
+
+    icm_initialized = 1u;
+    DL_GPIO_clearInterruptStatus(
+        GPIO_IMU_INT1_PORT,
+        GPIO_IMU_INT1_IMU_INT1_PA_PIN);
+    DL_GPIO_enableInterrupt(
+        GPIO_IMU_INT1_PORT,
+        GPIO_IMU_INT1_IMU_INT1_PA_PIN);
 
     return 0;
 }
@@ -490,40 +507,31 @@ uint8_t ICM42688_UpdateIfReady(void)
 
 
 
-void GROUP1_IRQHandler(void)
+void ICM42688_GPIO_IRQHandler(void)
 {
-    switch (DL_Interrupt_getPendingGroup(DL_INTERRUPT_GROUP_1))
+    uint32_t pending;
+
+    pending = DL_GPIO_getEnabledInterruptStatus(
+        GPIO_IMU_INT1_PORT,
+        GPIO_IMU_INT1_IMU_INT1_PA_PIN);
+
+    if ((pending & GPIO_IMU_INT1_IMU_INT1_PA_PIN) ==
+        GPIO_IMU_INT1_IMU_INT1_PA_PIN)
     {
-        case GPIO_IMU_INT1_INT_IIDX:
+        DL_GPIO_clearInterruptStatus(
+            GPIO_IMU_INT1_PORT,
+            GPIO_IMU_INT1_IMU_INT1_PA_PIN);
+
+        /*
+         * ICM42688 INT1 / Data Ready 到来。
+         * 启动一次 SPI TX/RX DMA 读取。
+         */
+        if (icm_initialized &&
+            (!icm_dma_busy) &&
+            (!icm_frame_ready))
         {
-            uint32_t pending;
-
-            pending = DL_GPIO_getEnabledInterruptStatus(
-                GPIO_IMU_INT1_PORT,
-                GPIO_IMU_INT1_IMU_INT1_PA_PIN);
-
-            if ((pending & GPIO_IMU_INT1_IMU_INT1_PA_PIN) ==
-                GPIO_IMU_INT1_IMU_INT1_PA_PIN)
-            {
-                DL_GPIO_clearInterruptStatus(
-                    GPIO_IMU_INT1_PORT,
-                    GPIO_IMU_INT1_IMU_INT1_PA_PIN);
-
-                /*
-                 * ICM42688 INT1 / Data Ready 到来。
-                 * 启动一次 SPI TX/RX DMA 读取。
-                 */
-                if ((!icm_dma_busy) && (!icm_frame_ready))
-                {
-                    (void)ICM42688_StartReadFrameDMA();
-                }
-            }
-
-            break;
+            (void)ICM42688_StartReadFrameDMA();
         }
-
-        default:
-            break;
     }
 }
 

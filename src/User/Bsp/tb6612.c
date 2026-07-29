@@ -13,7 +13,7 @@
  * STBY -> 硬件上拉
  */
 
-#define TB6612_PWM_PERIOD_COUNT ((uint16_t)TB6612_PWM_MAX_COUNT)
+#define TB6612_PWM_PERIOD_COUNT (3200u)
 
 static int16_t TB6612_LimitPwmCount(int16_t pwm_count);
 static uint16_t TB6612_GetPwmAbsCount(int16_t pwm_count);
@@ -160,15 +160,20 @@ static void TB6612_SetMotorADir(int16_t pwm_count)
  */
 static void TB6612_SetMotorBDir(int16_t pwm_count)
 {
+    /*
+     * Motor B is mounted with the opposite electrical polarity to Motor A.
+     * Keep the public convention consistent: positive PWM drives both wheels
+     * toward the vehicle's forward direction.
+     */
     if (pwm_count > 0)
-    {
-        DL_GPIO_setPins(GPIO_TB6612_DIR_BIN1_PORT, GPIO_TB6612_DIR_BIN1_PIN);
-        DL_GPIO_clearPins(GPIO_TB6612_DIR_BIN2_PORT, GPIO_TB6612_DIR_BIN2_PIN);
-    }
-    else if (pwm_count < 0)
     {
         DL_GPIO_clearPins(GPIO_TB6612_DIR_BIN1_PORT, GPIO_TB6612_DIR_BIN1_PIN);
         DL_GPIO_setPins(GPIO_TB6612_DIR_BIN2_PORT, GPIO_TB6612_DIR_BIN2_PIN);
+    }
+    else if (pwm_count < 0)
+    {
+        DL_GPIO_setPins(GPIO_TB6612_DIR_BIN1_PORT, GPIO_TB6612_DIR_BIN1_PIN);
+        DL_GPIO_clearPins(GPIO_TB6612_DIR_BIN2_PORT, GPIO_TB6612_DIR_BIN2_PIN);
     }
     else
     {

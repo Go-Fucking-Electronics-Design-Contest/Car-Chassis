@@ -10,6 +10,8 @@
 #include "line_sensor.h"
 #include "pid.h"
 #include "imu_task.h"
+#include "motor_inf_task.h"
+#include "car_task.h"
 /*
  * ==================== VOFA 发送变量配置区 ====================
  *
@@ -52,7 +54,7 @@ extern PID_t line_pid;
  */
 #define VOFA_SEND_FRAME_DIVIDER        (2u)
 /* 当前实际发送的 float 通道数量。修改 vofa_senddata[] 通道后要同步修改这里。 */
-#define VOFA_SENDDATA_CHANNEL_COUNT    (9u)
+#define VOFA_SENDDATA_CHANNEL_COUNT    (6u)
 /*
  * @brief 更新 VOFA 发送数组。
  *
@@ -64,6 +66,9 @@ static void VOFA_UpdateSendData(void)
     /*
      * 默认发送当前 IMU 姿态角和补偿后的 gyro。
      * 如果要切换发送内容，只改这里和 VOFA_SENDDATA_CHANNEL_COUNT。
+     */
+		    /*
+     *IMU
      */
     // vofa_senddata[0] = icm42688_data.roll;
     // vofa_senddata[1] = icm42688_data.pitch;
@@ -83,7 +88,35 @@ static void VOFA_UpdateSendData(void)
     // vofa_senddata[3] = line_sensor.raw[5];
     // vofa_senddata[4] = line_pid_output;
     // vofa_senddata[5] = line_pid.error;
-    /*
+
+		 /*
+     *编码器
+     */
+			vofa_senddata[0] = motor_left_speed_fdb;
+			vofa_senddata[1] = motor_right_speed_fdb;
+//						vofa_senddata[2] = motor_left_speed_fdb;
+//			vofa_senddata[3] = motor_right_speed_fdb;
+			
+//vofa_senddata[1] = motor_left_gpio_pulse_accum;
+//vofa_senddata[3] = motor_left_encoder_delta;
+//vofa_senddata[1] =motor_left_encoder_count;
+//vofa_senddata[5] = motor_right_encoder_count;
+
+  vofa_senddata[2] = (float)motor_left_speed_interval_us;
+  vofa_senddata[3] = motor_inf_dt_s * 1000000.0f;
+  vofa_senddata[4] = (float)motor_left_encoder_delta;
+  vofa_senddata[5] = vofa_deltat;
+//			vofa_senddata[4] = motor_left_pwm;
+//			vofa_senddata[5] = motor_right_pwm;
+			vofa_senddata[2] = motor_left_speed_ref;
+			vofa_senddata[3] = motor_right_speed_ref;
+//			vofa_senddata[6] = motor_left_encoder_count;
+//			vofa_senddata[7] = motor_inf_dt_s;
+		
+
+
+
+			/*
      * KF 对比发送模板，默认不参与运行。
      *
      * 使用方法：
@@ -116,9 +149,9 @@ static void VOFA_UpdateSendData(void)
      * 然后把下面这些通道打开。
      */
 
-     vofa_senddata[0] = icm42688_data.roll;
-     vofa_senddata[1] = icm42688_data.pitch;
-     vofa_senddata[2] = icm42688_data.yaw;
+//     vofa_senddata[0] = icm42688_data.roll;
+//     vofa_senddata[1] = icm42688_data.pitch;
+//     vofa_senddata[2] = icm42688_data.yaw;
      
     //  vofa_senddata[3] = icm42688_data.gyro_bias_x;
     //  vofa_senddata[4] = icm42688_data.gyro_bias_y;
@@ -127,15 +160,15 @@ static void VOFA_UpdateSendData(void)
     //  vofa_senddata[6] = icm42688_data.gx_dps;
     //  vofa_senddata[7] = icm42688_data.gy_dps;
     //  vofa_senddata[8] = icm42688_data.gz_dps;
-vofa_senddata[3] = imu_body_accel_g.x;
-vofa_senddata[4] = imu_body_accel_g.y;
-vofa_senddata[5] = imu_body_accel_g.z;
+//vofa_senddata[3] = imu_body_accel_g.x;
+//vofa_senddata[4] = imu_body_accel_g.y;
+//vofa_senddata[5] = imu_body_accel_g.z;
         // vofa_senddata[3] = imu_body_accel_g.y;
         // vofa_senddata[4] = icm42688_data.ay_g;
         // vofa_senddata[5] = icm42688_data.az_g;
 
-     vofa_senddata[6] = icm42688_data.gy_radps;
-     vofa_senddata[7] = imu_body_gyro_radps.z;
+//     vofa_senddata[6] = icm42688_data.gy_radps;
+//     vofa_senddata[7] = imu_body_gyro_radps.z;
 
     // vofa_senddata[9] =
     //     icm42688_data.gx_dps -
@@ -165,11 +198,11 @@ vofa_senddata[5] = imu_body_accel_g.z;
 uint8_t VOFA_SendConfiguredChannels(void)
 {
     
-    if (send_divider_count < VOFA_SEND_FRAME_DIVIDER)
-    {
-        return 1u;
-    }
-    send_divider_count = 0u;
+//    if (send_divider_count < VOFA_SEND_FRAME_DIVIDER)
+//    {
+//        return 1u;
+//    }
+//    send_divider_count = 0u;
     vofa_deltat = TS_Time_GetDelta_us(&vofa_last)*0.001f;
     VOFA_UpdateSendData();
     return VOFA_SendFloatArray(vofa_senddata, VOFA_SENDDATA_CHANNEL_COUNT);

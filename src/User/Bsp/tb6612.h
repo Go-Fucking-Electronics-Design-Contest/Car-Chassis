@@ -9,7 +9,7 @@
  *  3200 表示满速正转。
  *     0 表示滑行停止。
  */
-#define TB6612_PWM_MAX_COUNT (3200)
+#define TB6612_PWM_MAX_COUNT (2800)//1600
 
 void TB6612_Init(void);
 void TB6612_SetMotorA(int16_t pwm_count);

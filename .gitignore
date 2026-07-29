@@ -57,7 +57,18 @@ dkms.conf
 # 工程备份文件
 i_dont_know.uvguix.*
 i_dont_know.uvoptx
+*.uvprojx
 
 # 过程产物
 Objects/
 Listings/
+
+# Local J-Link and Keil generated files
+jlink_ee/
+JLinkLog.txt
+JLinkSettings.ini
+JLinkSettings.bak
+EventRecorderStub.scvd
+*.axf
+*.lnp
+*.build_log.htm

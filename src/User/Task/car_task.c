@@ -314,7 +314,7 @@ static void Car_Task_RunState(float dt_s)
 {
     if (!chassis_task_running)
     {
-        Car_Task_SetWheelTarget(0.0f, 0.0f);
+        Car_Task_SetWheelTarget(50.0f, 0.0f);
         return;
     }
 
@@ -406,6 +406,7 @@ static void Car_Task_SetWheelTarget(float base_speed, float turn_speed)
 {
     car_left_speed_ref = base_speed - turn_speed;
     car_right_speed_ref = base_speed + turn_speed;
+//	car_right_speed_ref = 0;
     Motor_Inf_SetTarget(car_left_speed_ref, car_right_speed_ref);
 }
 

@@ -127,6 +127,7 @@ const icm42688_raw_t *ICM42688_GetRawData(void);
 
 int8_t ICM42688_StartReadFrameDMA(void);
 void ICM42688_ParseFrame(void);
+void ICM42688_GPIO_IRQHandler(void);
 
 extern volatile icm42688_data_t icm42688_data;
 
